@@ -1,5 +1,5 @@
-# 🔥 PHOENIX-OPS 🔥
-> **P**redictive **H**otel **O**ptimization & **E**nforcement **N**etwork for **I**ntelligence-driven e**X**cellence in **O**perational **P**rotection **S**ystem
+# 🔥 APEX-FORGE 🔥
+> **A**utomated **P**redictive **E**ngine for e**X**cellence in **F**raud **O**bliteration & **R**evenue **G**rowth **E**ngine
 
 [![MLOps](https://img.shields.io/badge/MLOps-Ready-brightgreen)](https://github.com)
 [![Airflow](https://img.shields.io/badge/Apache-Airflow-017CEE?logo=apache-airflow)](https://airflow.apache.org/)
@@ -11,7 +11,7 @@
 
 ## 🚀 Project Overview
 
-**PHOENIX-OPS** is a cutting-edge, enterprise-grade MLOps platform that revolutionizes hotel revenue management and fraud detection through advanced machine learning, real-time analytics, and automated deployment pipelines. This system empowers hospitality businesses to maximize revenue while safeguarding against fraudulent bookings.
+**APEX-FORGE** is a cutting-edge, enterprise-grade MLOps platform that revolutionizes hotel revenue management and fraud detection through advanced machine learning, real-time analytics, and automated deployment pipelines. This system empowers hospitality businesses to maximize revenue while safeguarding against fraudulent bookings.
 
 ### 🎯 Core Capabilities
 
@@ -28,7 +28,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                         PHOENIX-OPS                              │
+│                         APEX-FORGE                               │
 │                    MLOps Platform Architecture                   │
 └─────────────────────────────────────────────────────────────────┘
 
@@ -93,7 +93,7 @@
 ## 📁 Project Structure
 
 ```
-phoenix-ops/
+apex-forge/
 ├── config/                      # Configuration files
 │   ├── path_config.py
 │   └── model_config.yaml
@@ -184,8 +184,8 @@ phoenix-ops/
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/phoenix-ops.git
-cd phoenix-ops
+git clone https://github.com/yourusername/apex-forge.git
+cd apex-forge
 ```
 
 2. **Create virtual environment**
@@ -213,7 +213,7 @@ airflow users create \
     --firstname Admin \
     --lastname User \
     --role Admin \
-    --email admin@phoenixops.com
+    --email admin@apexforge.com
 ```
 
 6. **Start services with Docker Compose**
@@ -364,9 +364,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Contact
 
 For questions or support, please reach out:
-- **Email**: support@phoenixops.com
-- **Slack**: #phoenix-ops
-- **Documentation**: [docs.phoenixops.com](https://docs.phoenixops.com)
+- **Email**: support@apexforge.com
+- **Slack**: #apex-forge
+- **Documentation**: [docs.apexforge.com](https://docs.apexforge.com)
 
 ---
 
@@ -381,7 +381,7 @@ For questions or support, please reach out:
 
 <div align="center">
 
-**Built with ❤️ by the PHOENIX-OPS Team**
+**Built with ❤️ by the APEX-FORGE Team**
 
 *Transforming Hotel Revenue Management & Fraud Detection through AI*
 
