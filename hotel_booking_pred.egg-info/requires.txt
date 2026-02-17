@@ -4,3 +4,5 @@ scikit-learn
 google-cloud-storage
 matplotlib
 seaborn
+lightgbm
+mlflow
