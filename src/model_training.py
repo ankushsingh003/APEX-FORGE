@@ -105,10 +105,21 @@ class ModelTraining:
             with mlflow.start_run():
                 logger.info("Starting the model training pipeline")
                 logger.info(f"Starting out mlflow tracking")
+
+                mlflow.log_artifact(self.train_path , actifact_ppath = "datasets")
+                mlflow.log_artifact(self.test_path , actifact_ppath = "datasets")
+                
                 X_train , y_train , X_test , y_test = self.load_and_split_data()
                 model = self.train_lgbm(X_train , y_train)
                 accuracy , precision , recall , f1 = self.evaluate_model(model , X_test , y_test)
                 self.save_model(model)
+
+                mlflow.log_metric("accuracy" , accuracy)
+                mlflow.log_metric("precision" , precision)
+                mlflow.log_metric("recall" , recall)
+                mlflow.log_metric("f1" , f1)
+                mlflow.log_artifact(self.model_output_path , actifact_ppath = "models")
+                mlflow.log_params(self.params_dict)
                 logger.info("Model training pipeline completed")
         except Exception as e:
             logger.error("Error while running the model training pipeline")
