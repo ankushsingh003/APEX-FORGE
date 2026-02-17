@@ -12,6 +12,9 @@ from config.model_params import LightGBM_params
 from utils.common_functions import load_data , read_yaml
 from scipy.stats import randint
 
+import mlflow 
+import mlflow.sklearn
+
 logger = get_logger("model_training")
 
 class ModelTraining:
@@ -99,12 +102,14 @@ class ModelTraining:
 
     def run(self):
         try:
-            logger.info("Starting the model training pipeline")
-            X_train , y_train , X_test , y_test = self.load_and_split_data()
-            model = self.train_lgbm(X_train , y_train)
-            accuracy , precision , recall , f1 = self.evaluate_model(model , X_test , y_test)
-            self.save_model(model)
-            logger.info("Model training pipeline completed")
+            with mlflow.start_run():
+                logger.info("Starting the model training pipeline")
+                logger.info(f"Starting out mlflow tracking")
+                X_train , y_train , X_test , y_test = self.load_and_split_data()
+                model = self.train_lgbm(X_train , y_train)
+                accuracy , precision , recall , f1 = self.evaluate_model(model , X_test , y_test)
+                self.save_model(model)
+                logger.info("Model training pipeline completed")
         except Exception as e:
             logger.error("Error while running the model training pipeline")
             raise CustomException(e, sys)
@@ -113,4 +118,3 @@ class ModelTraining:
 if __name__ == "__main__":
     model_training = ModelTraining(TRAIN_FILE_PATH, TEST_FILE_PATH, MODEL_PATH)
     model_training.run()
-    
