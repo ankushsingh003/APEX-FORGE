@@ -1,4 +1,4 @@
-# 🏨 Hotel Booking Prediction - MLOps Pipeline
+# 🏨 APEX-FORGE -> PREDICTION OF DEPENDENCY OF VARIOUS FACTORS ONN REVENUE VIA BOOKING CANCELLATION AND RETENTION
 
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
 [![MLflow](https://img.shields.io/badge/MLflow-Tracking-orange.svg)](https://mlflow.org/)
