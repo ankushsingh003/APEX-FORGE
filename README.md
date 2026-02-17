@@ -38,9 +38,6 @@ graph TD
         J --> L[Processed Data: train/test.csv]
     end
 
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style K fill:#00ff00,stroke:#333,stroke-width:2px
-    style J fill:#ffcc00,stroke:#333,stroke-width:4px
 ```
 
 ---
