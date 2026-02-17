@@ -156,3 +156,13 @@ archive (1)/
 static/
 template/
 hotel_booking_pred.egg-info/
+
+# Large files
+*.pkl
+*.joblib
+*.h5
+*.pt
+*.onnx
+*.zip
+*.tar.gz
+*.rar
