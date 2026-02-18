@@ -1,0 +1,10 @@
+artifact_location: file:D:/mlops_hotel_booking_pred/mlruns/0/models/m-cd94581faa7348d7b88d04505e6f0801/artifacts
+creation_timestamp: 1771373870522
+experiment_id: '0'
+last_updated_timestamp: 1771373895252
+model_id: m-cd94581faa7348d7b88d04505e6f0801
+model_type: null
+name: model
+source_run_id: 2367ff5e771a4bbb95c4fec826ca0c31
+status: 2
+status_message: null

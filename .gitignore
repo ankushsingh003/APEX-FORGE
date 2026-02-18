@@ -166,4 +166,3 @@ hotel_booking_pred.egg-info/
 *.rar
 
 # MLflow
-mlruns/

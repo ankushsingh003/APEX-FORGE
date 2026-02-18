@@ -1,0 +1,14 @@
+artifact_uri: file:D:/mlops_hotel_booking_pred/mlruns/0/2367ff5e771a4bbb95c4fec826ca0c31/artifacts
+end_time: 1771373895277
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 2367ff5e771a4bbb95c4fec826ca0c31
+run_name: righteous-sloth-610
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1771373854690
+status: 3
+tags: []
+user_id: ankush kumar singh
