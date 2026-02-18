@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Booking Predictor | Premium AI Service</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="glass-container">
+        <header>
+            <h1><i class="fas fa-hotel"></i> Hotel Reservation AI</h1>
+            <p>Predicting booking cancellations with high-precision machine learning.</p>
+        </header>
+
+        <form id="prediction-form">
+            <div class="form-grid">
+                <!-- Data Input Section -->
+                <div class="form-section">
+                    <h3><i class="fas fa-users"></i> Guests & Stay</h3>
+                    <div class="input-group">
+                        <label for="adults">Number of Adults</label>
+                        <input type="number" id="adults" name="number of adults" min="0" value="2" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="children">Number of Children</label>
+                        <input type="number" id="children" name="number of children" min="0" value="0" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="weekend_nights">Weekend Nights</label>
+                        <input type="number" id="weekend_nights" name="number of weekend nights" min="0" value="0"
+                            required>
+                    </div>
+                    <div class="input-group">
+                        <label for="week_nights">Week Nights</label>
+                        <input type="number" id="week_nights" name="number of week nights" min="0" value="2" required>
+                    </div>
+                </div>
+
+                <!-- Booking Details Section -->
+                <div class="form-section">
+                    <h3><i class="fas fa-concierge-bell"></i> Service Details</h3>
+                    <div class="input-group">
+                        <label for="meal_type">Type of Meal</label>
+                        <select id="meal_type" name="type of meal" required>
+                            <option value="Meal Plan 1">Meal Plan 1</option>
+                            <option value="Meal Plan 2">Meal Plan 2</option>
+                            <option value="Not Selected">Not Selected</option>
+                            <option value="Meal Plan 3">Meal Plan 3</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="room_type">Room Type</label>
+                        <select id="room_type" name="room type" required>
+                            <option value="Room_Type 1">Room_Type 1</option>
+                            <option value="Room_Type 4">Room_Type 4</option>
+                            <option value="Room_Type 6">Room_Type 6</option>
+                            <option value="Room_Type 2">Room_Type 2</option>
+                            <option value="Room_Type 5">Room_Type 5</option>
+                            <option value="Room_Type 7">Room_Type 7</option>
+                            <option value="Room_Type 3">Room_Type 3</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="parking">Car Parking Space</label>
+                        <select id="parking" name="car parking space" required>
+                            <option value="0">No</option>
+                            <option value="1">Yes</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="segment">Market Segment</label>
+                        <select id="segment" name="market segment type" required>
+                            <option value="Offline">Offline</option>
+                            <option value="Online">Online</option>
+                            <option value="Corporate">Corporate</option>
+                            <option value="Aviation">Aviation</option>
+                            <option value="Complementary">Complementary</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Financial & History Section -->
+                <div class="form-section">
+                    <h3><i class="fas fa-history"></i> History & Price</h3>
+                    <div class="input-group">
+                        <label for="repeated">Repeated Guest</label>
+                        <select id="repeated" name="repeated" required>
+                            <option value="0">No</option>
+                            <option value="1">Yes</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="p_c">Previous Cancellations (P-C)</label>
+                        <input type="number" id="p_c" name="P-C" min="0" value="0" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="p_not_c">Prev. Not Canceled (P-not-C)</label>
+                        <input type="number" id="p_not_c" name="P-not-C" min="0" value="0" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="avg_price">Average Price</label>
+                        <input type="number" id="avg_price" name="average price" step="0.01" min="0" value="100.00"
+                            required>
+                    </div>
+                    <div class="input-group">
+                        <label for="lead_time">Lead Time (Days)</label>
+                        <input type="number" id="lead_time" name="lead time" min="0" value="10" required>
+                    </div>
+                </div>
+
+                <!-- Date & Requests Section -->
+                <div class="form-section">
+                    <h3><i class="fas fa-calendar-alt"></i> Arrival & Requests</h3>
+                    <div class="input-group">
+                        <label for="reservation_date">Date of Reservation</label>
+                        <input type="date" id="reservation_date" name="date of reservation" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="special_requests">Special Requests</label>
+                        <input type="number" id="special_requests" name="special requests" min="0" value="0" required>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" id="submit-btn" class="primary-btn">
+                <span class="btn-text">Predict Status</span>
+                <span class="loader hidden"></span>
+            </button>
+        </form>
+
+        <div id="result-container" class="hidden">
+            <hr>
+            <div class="result-card">
+                <h2>Prediction Result: <span id="prediction-text">---</span></h2>
+                <div class="chart-wrapper">
+                    <canvas id="predictionChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='index.js') }}"></script>
+</body>
+
+</html>

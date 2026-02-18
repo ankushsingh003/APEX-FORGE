@@ -153,8 +153,6 @@ logs/
 artifacts/
 archive/
 archive (1)/
-static/
-template/
 hotel_booking_pred.egg-info/
 
 # Large files
