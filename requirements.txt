@@ -1,8 +1,10 @@
-numpy 
-pandas 
-scikit-learn 
+numpy
+pandas
+scikit-learn
 google-cloud-storage
 matplotlib
 seaborn
 lightgbm
 mlflow
+flask
+joblib
