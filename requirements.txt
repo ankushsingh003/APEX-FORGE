@@ -8,3 +8,4 @@ lightgbm
 mlflow
 flask
 joblib
+imbalanced-learn

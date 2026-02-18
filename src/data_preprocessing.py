@@ -1,119 +1,118 @@
 import os
+import sys
 import pandas as pd
 import numpy as np 
+from sklearn.preprocessing import LabelEncoder
+from sklearn.ensemble import RandomForestClassifier
+from imblearn.over_sampling import SMOTE
 from src.logger import get_logger
-from config.paths_config import *
+from config.path_config import *
 from src.custom_exception import CustomException
 from utils.common_functions import load_data, read_yaml
-from sklearn.ensemble import LabelEncoder
 
-from imblearrn.over_sampling import SMOTE
 logger = get_logger(__name__)
 
-
 class DataPreprocessing:
-    def __init__(self ,  train_path , test_path , processed_dir , config_path  ):
-        self.train_path = train_path
-        self.test_path = test_path
-        self.processed_dir = processed_dir
-        self.config_path = config_path
-        self.config = read_yaml(config_path)
+    def __init__(self, config):
+        self.config = config
+        self.cat_cols = self.config["data_processing"]["categorical_cols"]
+        self.num_cols = self.config["data_processing"]["numerical_cols"]
+        self.skew_threshold = self.config["data_processing"]["skew_threshold"]
+        self.num_features_to_select = self.config["data_processing"]["num_features_to_select"]
         
-        
-    def preprocess(self):
+    def preprocess_df(self, df):
         try:
-            logger.info("Starting data preprocessing")
+            logger.info("Preprocessing dataframe")
+            df = df.copy()
             
-            logger.info(f" Dropping the columns")
-            train.drop(columns=["Booking_ID"] , inplace=True)
-            train.ddrop_duplicates(inplace=True)
-            cat_cols = self.config["data_processing"]["categorical_cols"]
-            num_cols = self.config["data_processing"]["numerical_cols"]
+            # Drop unnecessary columns
+            for col in ["Booking_ID", "date of reservation"]:
+                if col in df.columns:
+                    df.drop(columns=[col], inplace=True)
             
-            logger.info(f"Applying LabelEncoder")
-            mappings = {}
-            for col in categorical_cols:
-                train[col] = label_encoder.fit_transform(train[col])
-
-                mappings[col] = { label:code for label , code in zip( label_encoder.classes_ , label_encoder.transform(label_encoder.classes_))}
+            df.drop_duplicates(inplace=True)
             
-            logger.info(f"LabelEncoder applied successfully")
-            logger.info(f"Mappings:  ")
-            for col , mapping in mappings.items():
-                logger.info(f"{col}: {mapping}")
+            # Fill missing values if any
+            df.fillna(method='ffill', inplace=True)
 
-            logger.info(f"Doing Skewness Handling")
-            skew_threshold = self.config["data_processing"]["skew_threshold"]
-            skewness = X_numeric.apply(lambda x:x.skew())
-
-            for column in skewness[skewness > skew_threshold].index:
-                X_numeric[column] = np.log1p(X_numeric[column])
-
+            # Label Encoding
+            le = LabelEncoder()
+            for col in self.cat_cols:
+                if col in df.columns:
+                    df[col] = le.fit_transform(df[col].astype(str))
+            
+            # Skewness Handling
+            for col in self.num_cols:
+                if col in df.columns:
+                    if df[col].skew() > self.skew_threshold:
+                        df[col] = np.log1p(df[col])
+            
+            return df
         except Exception as e:
-            logger.error("Error while doing skewness handling")
+            logger.error(f"Error while preprocessing dataframe: {e}")
             raise CustomException(e, sys)
     
-    def balance_data(self , train):
+    def balance_data(self, df):
         try:
-            logger.info("Balancing the data")
-            X = train.drop( columns=["booking status"])
-            Y = train["booking status"]
-            smote = SMOTE()
-            X_resampled , Y_resampled = smote.fit_resample(X , Y)
-            balanced_df  = pd.DataFrame(X_resampled , columns = X.columns)
-            balanced_df["booking status"] = Y_resampled
-            logger.info("Data balanced successfully")
+            logger.info("Balancing the data using SMOTE")
+            X = df.drop(columns=["booking status"])
+            y = df["booking status"]
+            
+            smote = SMOTE(random_state=42)
+            X_resampled, y_resampled = smote.fit_resample(X, y)
+            
+            balanced_df = pd.DataFrame(X_resampled, columns=X.columns)
+            balanced_df["booking status"] = y_resampled
             return balanced_df
         except Exception as e:
-            logger.error("Error while balancing the data")
+            logger.error(f"Error while balancing data: {e}")
             raise CustomException(e, sys) 
             
-    def feature_selection(self , df):
+    def feature_selection(self, df):
         try:
-            logger.info("Feature selection")
-            X = df.drop( columns = "booking_status")
-            y = df["booking_status"]
+            logger.info("Performing feature selection using RandomForest")
+            X = df.drop(columns=["booking status"])
+            y = df["booking status"]
+            
             model = RandomForestClassifier(random_state=42)
-            feature_importance = model.feature_importances_
-            feature_importance_df = pd.DataFrame({
-                "feature": X.columns,
-                "important": feature_importance
-            })
-            feature_importance_df.sort_values( by = "important" , ascending = False )
-            num_features_to_select = self.config["data_processing"]["num_features_to_select"]
-            top_feature_importance_df  = feature_importance_df.sort_values( by = "important" , ascending = False )
-            top_10_features = top_feature_importance_df["feature"].head(num_features_to_select).values
-            top_10_df = df[top_10_features.tolist() + ["booking_status"]]
-            logger.info(f"Top {num_features_to_select} features selected")
-            return top_10_df
+            model.fit(X, y)
+            
+            feature_importance = pd.Series(model.feature_importances_, index=X.columns)
+            top_features = feature_importance.nlargest(self.num_features_to_select).index.tolist()
+            
+            logger.info(f"Top {self.num_features_to_select} features selected: {top_features}")
+            return df[top_features + ["booking status"]]
         except Exception as e:
-            logger.error("Error while doing feature selection")
+            logger.error(f"Error while performing feature selection: {e}")
             raise CustomException(e, sys)
 
-    def save_data( self , file_path):
+    def run(self):
         try:
-            logger.info("Saving the data")
-            df.to_csv(file_path , index = False)
-            logger.info("Data saved successfully")
-        except Exception as e:
-            logger.error("Error while saving the data")
-            raise CustomException(e, sys)
-
-
-    def process(self):
-        try:
-            logger.info("Data preprocessing Initiated")
-            train = load_data(self.train_path)
-            test = load_data(self.test_path)
-            train = self.preprocess(train)
-            test = self.preprocess(test)
+            logger.info("Data preprocessing started")
+            # Load raw train/test split from ingestion
+            train = load_data(TRAIN_FILE_PATH)
+            test = load_data(TEST_FILE_PATH)
+            
+            # Preprocess
+            train = self.preprocess_df(train)
+            test = self.preprocess_df(test)
+            
+            # Balance (only train usually, but following original logic for now)
             train = self.balance_data(train)
-            test = self.balance_data(test)
-            train = self.feature_selection(train)
-            test = self.feature_selection(test)
-            self.save_data(train , PROCESSED_TRAIN_PATH)
-            self.save_data(test , PROCESSED_TEST_PATH)
-            logger.info("Data preprocessing Completed")
+            # test = self.balance_data(test) # Usually don't balance test
+            
+            # Feature Selection
+            train_selected = self.feature_selection(train)
+            # Match test columns to train selected columns
+            columns_to_keep = train_selected.columns.tolist()
+            test_selected = test[columns_to_keep]
+            
+            # Save
+            os.makedirs(PROCESSED_DIR, exist_ok=True)
+            train_selected.to_csv(PROCESSED_TRAIN_PATH, index=False)
+            test_selected.to_csv(PROCESSED_TEST_PATH, index=False)
+            
+            logger.info("Data preprocessing completed and saved")
         except Exception as e:
-            logger.error("Error while doing data preprocessing")
+            logger.error(f"Error in preprocessing run: {e}")
             raise CustomException(e, sys)

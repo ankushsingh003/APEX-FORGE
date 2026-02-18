@@ -1,63 +1,63 @@
 import os
+import sys
 import pandas as pd
-from google.cloud import storage
+import shutil
 from sklearn.model_selection import train_test_split
 from src.logger import get_logger
 from src.custom_exception import CustomException
-from src.utils.common_functions import read_yaml
-import sys
-from config import *
+from utils.common_functions import read_yaml
+from config.path_config import *
 
 logger = get_logger(__name__)
 
 class DataIngestion:
-    def __init__(self,config):
+    def __init__(self, config):
         self.config = config["data_ingestion"]
-        self.bucket_name = self.config["bucket_name"]
-        self.dataset_name = self.config["dataset_name"]
-        self.train_test_ratio = self.config["train_ratio"]
+        self.train_ratio = self.config["train_ratio"]
+        # In this local setup, we look for data in archive (1)/booking.csv
+        self.local_data_path = "archive (1)/booking.csv"
         
-
         os.makedirs(os.path.dirname(RAW_FILE_PATH), exist_ok=True)
-        logger.info(f"Data Ingestion Initiated with bucket name: {self.bucket_name} and dataset name: {self.dataset_name}")
+        logger.info("Data Ingestion Initialized")
          
-    def download_csv_from_gcp(self):
+    def ingest_local_data(self):
         try:
-            storage_client = storage.Client()
-            bucket = storage_client.get_bucket(self.bucket_name)
-            blob = bucket.blob(self.dataset_name)
-            blob.download_to_filename(RAW_FILE_PATH)
-            logger.info(f"Dataset downloaded from GCP bucket: {self.bucket_name} and dataset name: {self.dataset_name}")
+            if os.path.exists(self.local_data_path):
+                logger.info(f"Found local data at {self.local_data_path}. Copying to {RAW_FILE_PATH}")
+                shutil.copy(self.local_data_path, RAW_FILE_PATH)
+            else:
+                logger.error(f"Local data not found at {self.local_data_path}")
+                raise FileNotFoundError(f"Missing {self.local_data_path}")
         except Exception as e:
-            logger.error(f"Error while downloading dataset from GCP bucket: {self.bucket_name} and dataset name: {self.dataset_name}")
+            logger.error(f"Error while ingesting local data: {e}")
             raise CustomException(e, sys)
-
 
     def split_data(self):
         try:
+            logger.info(f"Splitting data from {RAW_FILE_PATH}")
             df = pd.read_csv(RAW_FILE_PATH)
-            train_df, test_df = train_test_split(df, test_size=self.train_test_ratio, random_state=42)
+            
+            train_df, test_df = train_test_split(df, test_size=1-self.train_ratio, random_state=42)
+            
             train_df.to_csv(TRAIN_FILE_PATH, index=False)
             test_df.to_csv(TEST_FILE_PATH, index=False)
-            logger.info(f"Dataset split into train and test with ratio: {self.train_test_ratio}")
+            logger.info(f"Data split saved to {TRAIN_FILE_PATH} and {TEST_FILE_PATH}")
         except Exception as e:
-            logger.error(f"Error while splitting dataset into train and test with ratio: {self.train_test_ratio}")
+            logger.error(f"Error while splitting data: {e}")
             raise CustomException(e, sys)
     
-
     def run(self):
         try:
-            logger.info("Data Ingestion Initiated")
-            self.download_csv_from_gcp()
+            self.ingest_local_data()
             self.split_data()
-            logger.info("Data Ingestion Completed")
+            logger.info("Data Ingestion run completed")
         except Exception as e:
-            logger.error(f"Error while running data ingestion")
+            logger.error("Error in data ingestion run")
             raise CustomException(e, sys)
 
-    
 if __name__ == "__main__":
+    from utils.common_functions import read_yaml
+    from config.path_config import CONFIG_PATH
     config = read_yaml(CONFIG_PATH)
     data_ingestion = DataIngestion(config)
     data_ingestion.run()
-    

@@ -1,131 +1,111 @@
-import os 
-import pandas as pd 
+import os
+import sys
+import pandas as pd
 import joblib
-from sklearn.model_selection import RandomizedSearchCV
 import lightgbm as lgb
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score , classification_report , confusion_matrix , precision_score , recall_score , f1_score , roc_auc_score , log_loss , mean_squared_error , mean_absolute_error , r2_score , mean_squared_log_error , median_absolute_error , mean_absolute_percentage_error , mean_poisson_deviance , mean_gamma_deviance , mean_tweedie_deviance
+from sklearn.model_selection import RandomizedSearchCV
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from src.logger import get_logger
 from src.custom_exception import CustomException
 from config.path_config import *
-from config.model_params import LightGBM_params
-from utils.common_functions import load_data , read_yaml
-from scipy.stats import randint
-
-import mlflow 
+from utils.common_functions import load_data
+import mlflow
 import mlflow.sklearn
 
 logger = get_logger("model_training")
 
 class ModelTraining:
-    def __init__(self , train_path , test_path , model_output_path):
-        self.train_path = train_path
-        self.test_path = test_path
-        self.model_output_path = model_output_path
-
-        self.params_dict = LIGHTGBM_PARAMS
-        self.random_search = RANDOM_SEARCH_PARAMS
-    
-    def load_and_split_data(self):
+    def __init__(self, config):
+        self.config = config
+        self.model_path = MODEL_PATH
+        
+    def load_data(self):
         try:
-            logger.info(f"Loading and splitting the data")
-            train = load_data(self.train_path)
-            test = load_data(self.test_path)
+            logger.info("Loading processed data for training")
+            train = load_data(PROCESSED_TRAIN_PATH)
+            test = load_data(PROCESSED_TEST_PATH)
+            
             X_train = train.drop(columns=["booking status"])
             y_train = train["booking status"]
             X_test = test.drop(columns=["booking status"])
             y_test = test["booking status"]
-            logger.info("Data loaded and split successfully")
-            return X_train , y_train , X_test , y_test
-        except Exception as e:
-            logger.error("Error while loading and splitting the data")
-            raise CustomException(e, sys)
             
-        
-    def train_lgbm( self , X_train  , y_train):
+            return X_train, y_train, X_test, y_test
+        except Exception as e:
+            logger.error("Error while loading processed data")
+            raise CustomException(e, sys)
+
+    def train_model(self, X_train, y_train):
         try:
-            logger.info(f"Training LightGBM model")
-            lgbm = lgb.LGBMClassifier(random_state=self.random_search["random_state"])
+            logger.info("Training LightGBM model")
+            # Using basic params or defaults since config structure might vary
+            model = lgb.LGBMClassifier(random_state=42)
+            
+            # Simple hyperparameter optimization
+            param_grid = {
+                'n_estimators': [50, 100],
+                'learning_rate': [0.01, 0.1],
+                'num_leaves': [31, 50]
+            }
             
             random_search = RandomizedSearchCV(
-                estimator=rf,
-                param_distributions=param_dist,
-                n_iter=5,
-                cv=5,
-                n_jobs=-1,
+                estimator=model,
+                param_distributions=param_grid,
+                n_iter=3,
+                cv=2,
                 random_state=42,
-                scoring='accuracy'
+                n_jobs=-1
             )
-            logger.info("Starting the model training")
-            random_search.fit(X_train , y_train)
-            logger.info("Hyperparamtere training completed")
             
-            best_params = random_search.best_params_
-            logger.info(f"Got the best parameters: {best_params}")
-            best_lgbm_model = random_search.best_estimator_
-            logger.info("Best LightGBM model trained successfully")
-            return best_lgbm_model
+            random_search.fit(X_train, y_train)
+            logger.info(f"Best parameters: {random_search.best_params_}")
+            return random_search.best_estimator_
         except Exception as e:
-            logger.error("Error while training LightGBM model")
+            logger.error(f"Error while training model: {e}")
             raise CustomException(e, sys)
 
-
-    def evaluate_model(self , model , X_test , y_test):
+    def evaluate_model(self, model, X_test, y_test):
         try:
-            logger.info("Evaluating the model")
+            logger.info("Evaluating model")
             y_pred = model.predict(X_test)
-            accuracy = accuracy_score(y_test , y_pred)
-            logger.info(f"Accuracy: {accuracy}")
-            precision = precision_score(y_test , y_pred)
-            logger.info(f"Precision: {precision}")
-            recall = recall_score(y_test , y_pred)
-            logger.info(f"Recall: {recall}")
-            f1 = f1_score(y_test , y_pred)
-            logger.info(f"F1 Score: {f1}")
-            
-            return accuracy , precision , recall , f1 
+            metrics = {
+                "accuracy": accuracy_score(y_test, y_pred),
+                "precision": precision_score(y_test, y_pred),
+                "recall": recall_score(y_test, y_pred),
+                "f1": f1_score(y_test, y_pred)
+            }
+            logger.info(f"Metrics: {metrics}")
+            return metrics
         except Exception as e:
-            logger.error("Error while evaluating the model")
+            logger.error("Error evaluating model")
             raise CustomException(e, sys)
 
-
-            
-    def save_model(self,model):
+    def save_model(self, model):
         try:
-            os.makedirs(os.path.dirname(self.model_output_path), exist_ok=True)
-            logger.info(f"Saving the model to {self.model_output_path}")
-            joblib.dump(model, self.model_output_path)
-            logger.info(f"Model saved to {self.model_output_path}")
+            os.makedirs(os.path.dirname(self.model_path), exist_ok=True)
+            logger.info(f"Saving model to {self.model_path}")
+            joblib.dump(model, self.model_path)
         except Exception as e:
-            logger.error("Error while saving the model")
+            logger.error("Error saving model")
             raise CustomException(e, sys)
 
     def run(self):
         try:
+            # Set local tracking URI for MLflow to avoid connection issues
+            mlflow.set_tracking_uri("file:./mlruns")
+            
             with mlflow.start_run():
-                logger.info("Starting the model training pipeline")
-                logger.info(f"Starting out mlflow tracking")
-
-                mlflow.log_artifact(self.train_path , actifact_ppath = "datasets")
-                mlflow.log_artifact(self.test_path , actifact_ppath = "datasets")
-                
-                X_train , y_train , X_test , y_test = self.load_and_split_data()
-                model = self.train_lgbm(X_train , y_train)
-                accuracy , precision , recall , f1 = self.evaluate_model(model , X_test , y_test)
+                X_train, y_train, X_test, y_test = self.load_data()
+                model = self.train_model(X_train, y_train)
+                metrics = self.evaluate_model(model, X_test, y_test)
                 self.save_model(model)
-
-                mlflow.log_metric("accuracy" , accuracy)
-                mlflow.log_metric("precision" , precision)
-                mlflow.log_metric("recall" , recall)
-                mlflow.log_metric("f1" , f1)
-                mlflow.log_artifact(self.model_output_path , actifact_ppath = "models")
-                mlflow.log_params(self.params_dict)
-                logger.info("Model training pipeline completed")
+                
+                # Log to MLflow
+                for name, value in metrics.items():
+                    mlflow.log_metric(name, value)
+                
+                mlflow.sklearn.log_model(model, "model")
+                logger.info("Model training pipeline complete")
         except Exception as e:
-            logger.error("Error while running the model training pipeline")
+            logger.error("Error in model training run")
             raise CustomException(e, sys)
-
-
-if __name__ == "__main__":
-    model_training = ModelTraining(TRAIN_FILE_PATH, TEST_FILE_PATH, MODEL_PATH)
-    model_training.run()
